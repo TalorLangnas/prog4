@@ -24,8 +24,11 @@ int main()
             delete_node_cmd(&head);
             break;
         case 'S':
-           
-            mindistance = shortsPath_cmd(head);
+           int ver1 =0;
+           int ver2 =0;
+           scanf("%d",&ver1);
+           scanf("%d",&ver2);
+            mindistance = shortsPath_cmd(head,ver1,ver2);
             printf("Dijsktra shortest path: %d \n", mindistance);
             break;
         // case 'P':

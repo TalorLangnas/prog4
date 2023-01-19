@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 
 
 pnode new_node(int vertex,pnode *head){     //Create new node
@@ -29,44 +30,58 @@ void new_edge(int myWeight,pnode source , pnode dest){
 }
 
 pnode find_vertex(int input, pnode head){
-    pnode tmp = head;
-    while(tmp){
-          if(tmp->next == input){
-            return tmp;
-          } 
-    }    
+    while (head)
+    {
+        if (head->node_num == input)
+        {
+            return head;
+        }
+        head = head->next;
+    }
     return NULL;
 }
 
 
 pnode setVertex(int numOfVertex){ //Create graph Vertex
-    pnode head = NULL;
-    pnode tmp = new_node(numOfVertex-1, head);
+    pnode curr = (pnode)malloc(sizeof(node));
+    if (!curr)
+    {
+        return NULL;
+    }
+    curr->node_num = numOfVertex - 1;
+    curr->edges = NULL;
+    curr->next = NULL;
+
     for (int i = 1; i < numOfVertex; i++)
     {
-        tmp = new_node(numOfVertex-i-1, head);
+        pnode newNode = (pnode)malloc(sizeof(node));
+        if (!newNode)
+        {
+            return NULL;
+        }
+        newNode->node_num = numOfVertex - i - 1;
+        newNode->edges = NULL;
+        newNode->next = curr;
+        curr = newNode;
     }
-    return head;
+    return curr;
 }
 
 
 
 
 void build_graph_cmd(pnode *head){ //for option A
-    int number_ver;
-    int source_v;
-    int dest_v;
-    int weight;
+    int number_ver=0;
+    int source_v=0;
+    int dest_v=0;
+    int weight=0;
     char c ;
     int check =0;
-    pnode head=NULL;
+    // pnode head=NULL;
     pnode sourceVertex=NULL;
     pnode destVertex=NULL;
-    pedge Pedge = NULL;
-
-
     scanf("%d", &number_ver);
-    head = setVertex(number_ver);
+    *head = setVertex(number_ver);
     if(!head){
         printf("head is null");
         return;
@@ -80,7 +95,7 @@ void build_graph_cmd(pnode *head){ //for option A
             return;
         }
                 
-    while(!feof(stdin) && (check=scanf("%d", dest_v))){
+    while(!feof(stdin) && (check=scanf("%d", &dest_v))){
         destVertex = find_vertex(dest_v,*head);
         scanf("%d",&weight);
         
@@ -127,7 +142,23 @@ void insert_node_cmd(pnode *head){ //for option B
 
 }
 
-
+void delete_edge(pnode item, int endpoint){
+    pedge currEdge = item->edges;
+    pedge prevEdge = NULL;
+    while (currEdge) {
+        if(currEdge->endpoint->node_num == endpoint){
+            if(prevEdge == NULL) {
+                item->edges = currEdge->next;
+            } else {
+                prevEdge->next = currEdge->next;
+            }
+            free(currEdge);
+            break;
+        }
+        prevEdge = currEdge;
+        currEdge = currEdge->next;
+    }
+}
 void delete_node_cmd(pnode *head){ //option D
     int ver;
     pnode curr = *head;
@@ -153,96 +184,23 @@ void delete_node_cmd(pnode *head){ //option D
     }
 }
 
-
-int shortsPath_cmd(pnode head){
-    int sourceNodeNum;
-    int desNode;
-    scanf("%d", &sourceNodeNum);
-    scanf("%d", &desNode);
-
-    pnode sourceNode = NULL;
-    pnode destNode = NULL;
-    pnode currNode = head;
-
-    // finding both vertices and resetting values
-    while (currNode)
-    {
-        currNode->dist = __INT_MAX__;
-        currNode->visited = 0;
-        if (currNode->node_num == sourceNodeNum)
-        {
-            sourceNode = currNode;
-            sourceNode->dist = 0;
-        }
-        else if (currNode->node_num == desNode)
-        {
-            destNode = currNode;
-        }
-        currNode = currNode->next;
-    }
-
-    // running dijkstra's algorithm
-    currNode = findMinNotVisited(head);
-    while (currNode)
-    {
-        currNode->visited = 1;
-        pedge currentEdge = currNode->edges;
-        while (currentEdge)
-        {
-            if (!currentEdge->endpoint->visited && currNode->dist + currentEdge->weight < currentEdge->endpoint->dist)
-            {
-                currentEdge->endpoint->dist = currNode->dist + currentEdge->weight;
-            }
-            currentEdge = currentEdge->next;
-        }
-        currNode = findMinNotVisited(head);
-    }
-    if (destNode->dist == __INT_MAX__)
-    {
-        destNode->dist = -1;
-    }
-    return destNode->dist;
-}
-
-pnode findMinNotVisited(pnode head)
+void deleteGraph_cmd(pnode *head)
 {
-    int minNodeIndex = __INT_MAX__;
-    pnode result = NULL;
-    while (head)
+    pnode temp = *head;
+    pedge curredge = NULL;
+    pnode tmp2 = NULL;
+    while (temp)
     {
-        if (!head->visited && head->dist < minNodeIndex)
+        curredge = temp->edges;
+        while (curredge)
         {
-            minNodeIndex = head->dist;
-            result = head;
+            pedge tmp3 = curredge;
+            curredge = curredge->next;
+            free(tmp3);
         }
-        head = head->next;
-    }
-    return result;
-}
-
-void TSP_cmd(pnode head){
-    int numberNodes = 0;
-    scanf("%d", &numberNodes);
-    int WhichNodes[numberNodes];
-
-    for (int i = 0; i < numberNodes; ++i) 
-    {
-        scanf("%d", &WhichNodes[i]);
-    }
-
-    int f = factorial(numberNodes);
-    int permutations[f];
-    int temp = 0;
-    per(head,WhichNodes,0,numberNodes-1,permutations,&temp);
-    int n = min(permutations,f);
-    
-    if(permutations[n] == __INT_MAX__)
-    {
-        printf("TSP shortest path: %d \n",-1);
-    }
-    else
-    {
-        printf("TSP shortest path: %d \n",permutations[n]);
+        tmp2 = temp;
+        temp = temp->next;
+        free(tmp2);
     }
 }
 
@@ -266,61 +224,116 @@ void printGraph_cmd(pnode head)
         temp = temp->next;
     }
 }
-
-void swap(int *x, int *y) 
-{
-    int c;
-    c = *x;
-    *x = *y;
-    *y = c;
-}
-
-int factorial(int size)
-{
-    if(size < 0) return 0;
-    if(size == 0) return 1;
-    return factorial(size-1)*size;
-}
-
-int min(const int arr[],int n)
-{
-    int index = 0;
-
-    for (int i = 1; i <n; ++i) 
-    {
-        if(arr[i]<arr[index]){index = i;}
-    }
-
-    return index;
-}
-
-int FindShortestPath(node **head, int values[], int len)
-{
-    int dst = 0;
-    for (int i = 0; i < len-1; ++i) {
-        int dijk = dijkstra(head,values[i],values[i+1],0);
-        if(dijk == __INT_MAX__){
-            return __INT_MAX__;
+pnode MinV(pnode head){
+    pnode current = head, min = NULL;
+    int mind = __INT_MAX__;
+    while (current) {
+        if (!current->visited && current->dist < mind) {
+            min = current;
+            mind = current->dist;
         }
-        dst += dijk;
+        current = current->next;
     }
-    return dst;
+    return min;
 }
 
 
-
-void per(node **head, int *values, int right, int left ,int *permutat, int *n)
+int shortsPath_cmd(pnode head, int ver1, int ver2)
 {
-    if(right == left)
+    pnode ver1N = NULL;
+    pnode ver2N = NULL;
+    pnode current = head;
+
+    while (current)
     {
-        permutat[(*n)++] = FindShortestPath(head, values, left+1);
+        current->dist = __INT_MAX__;
+        current->visited = 0;
+        if (current->node_num == ver1)
+        {
+            ver1N = current;
+            ver1N->dist = 0;
+        }
+        else if (current->node_num == ver2)
+        {
+            ver1N = current;
+        }
+        current = current->next;
+    }
+
+    current = MinV(head);
+    while (current)
+    {
+        current->visited = 1;
+        pedge cedge = current->edges;
+        while (cedge)
+        {
+            if (!cedge->endpoint->visited && current->dist + cedge->weight < cedge->endpoint->dist)
+            {
+                cedge->endpoint->dist = current->dist + cedge->weight;
+            }
+            cedge = cedge->next;
+        }
+        current = MinV(head);
+    }
+    if (ver2N->dist == __INT_MAX__)
+    {
+        ver2N->dist = -1;
+    }
+    return ver2N->dist;
+}
+void swap(int *numbers, int index1, int index2)
+{
+    int temp = numbers[index1];
+    numbers[index1] = numbers[index2];
+    numbers[index2] = temp;
+}
+void TSP_SIDE(pnode head, int *num, int k, int v, int *value)
+{
+    if (k == 2)
+    {
+        int d = shortsPath_cmd(head, num[0], num[1]);
+        if (d != -1 && (v + d) < *value)
+        {
+            *value = (v + d);
+        }
         return;
     }
 
-    for (int i = right; i <=left; ++i) 
+    for (int i = 1; i < k; i++)
     {
-        swap((values + i), (values + right));
-        per(head,values,right+1,left,permutat,n);
-        swap((values+i),(values+right));
+        swap(num, 1, i);
+        int d = shortsPath_cmd(head, num[0], num[1]);
+        if (d == -1)
+        {
+            return;
+        }
+        TSP_SIDE(head, num + 1, k - 1, v + d, value);
+        swap(num, i, 1);
     }
+}
+
+void TSP_cmd(pnode head)
+{
+    int k;
+    scanf("%d", &k);
+    int *numbers = (int *)(malloc(sizeof(int) * k));
+    int value = __INT_MAX__;
+    for (int i = 0; i < k; i++)
+    {
+        scanf("%d", &numbers[i]);
+    }
+
+    for (int i = 0; i < k; i++)
+    {
+        swap(numbers, 0, i);
+        TSP_SIDE(head, numbers, k, 0, &value);
+        swap(numbers, i, 0);
+    }
+
+    if (value == __INT_MAX__)
+    {
+        value = -1;
+    }
+    free(numbers);
+    printf("TSP shortest path: %d \n", value);
 }
