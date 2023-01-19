@@ -71,13 +71,13 @@ pnode setVertex(int numOfVertex){ //Create graph Vertex
 
 
 void build_graph_cmd(pnode *head){ //for option A
+    deleteGraph_cmd(head);
     int number_ver=0;
     int source_v=0;
     int dest_v=0;
     int weight=0;
-    char c ;
+    char c;
     int check =0;
-    // pnode head=NULL;
     pnode sourceVertex=NULL;
     pnode destVertex=NULL;
     scanf("%d", &number_ver);
@@ -95,12 +95,11 @@ void build_graph_cmd(pnode *head){ //for option A
             return;
         }
                 
-    while(!feof(stdin) && (check=scanf("%d", &dest_v))){
-        destVertex = find_vertex(dest_v,*head);
-        scanf("%d",&weight);
-        
-       new_edge(weight,sourceVertex, destVertex);
-    }
+        while(!feof(stdin) && (check=scanf("%d", &dest_v))){
+            destVertex = find_vertex(dest_v,*head);
+            scanf("%d",&weight);
+            new_edge(weight,sourceVertex, destVertex);
+        }
     }    
 
 } 
